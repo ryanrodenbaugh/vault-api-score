@@ -78,22 +78,32 @@ async function fetchVaultScore(network, address) {
         const rows = await sheet.getRows();
         console.log(`12. Successfully got ${rows.length} rows`);
 
+        console.log('13. Searching for vault...');
+        console.log(`Looking for network: ${network}, address: ${address}`);
+        
         const vault = rows.find(row => {
             const rowNetwork = row._rawData[4];
             const rowAddress = row._rawData[5];
+            
+            console.log(`Checking row - Network: ${rowNetwork}, Address: ${rowAddress}`);
+            
             return rowNetwork && rowAddress &&
                    rowNetwork.toLowerCase() === network.toLowerCase() &&
-                   rowAddress === address;
+                   rowAddress.toLowerCase() === address.toLowerCase();
         });
 
         if (!vault) {
+            console.log('14. No vault found matching criteria');
             return null;
         }
 
-        return {
+        console.log('15. Vault found, returning data');
+        const result = {
             name: vault._rawData[0],
             score: `Score: ${vault._rawData[6]}`
         };
+        console.log('Result:', result);
+        return result;
     } catch (error) {
         console.error('Error in spreadsheet operations:', error);
         throw error;
