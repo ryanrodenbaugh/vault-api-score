@@ -29,6 +29,11 @@ const credentials = process.env.GOOGLE_CREDENTIALS
 
 async function fetchVaultScore(network, address) {
     try {
+        // Verify credentials are available
+        if (!credentials.private_key || !credentials.client_email) {
+            throw new Error('Google credentials not properly configured');
+        }
+
         const auth = new JWT({
             email: credentials.client_email,
             key: credentials.private_key,
