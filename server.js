@@ -54,12 +54,30 @@ async function fetchVaultScore(network, address) {
             throw jwtError;
         }
 
+        console.log('6. Creating GoogleSpreadsheet instance...');
         const doc = new GoogleSpreadsheet(SPREADSHEET_ID, auth);
-        await doc.loadInfo();
-        
+        console.log('7. Instance created');
+
+        console.log('8. Attempting to load spreadsheet info...');
+        try {
+            await doc.loadInfo();
+            console.log('9. Successfully loaded spreadsheet info');
+        } catch (loadError) {
+            console.error('Error loading spreadsheet:', loadError);
+            if (loadError.response) {
+                console.error('Response status:', loadError.response.status);
+                console.error('Response data:', loadError.response.data);
+            }
+            throw loadError;
+        }
+
         const sheet = doc.sheetsByIndex[0];
+        console.log('10. Got first sheet');
+
+        console.log('11. Attempting to get rows...');
         const rows = await sheet.getRows();
-        
+        console.log(`12. Successfully got ${rows.length} rows`);
+
         const vault = rows.find(row => {
             const rowNetwork = row._rawData[4];
             const rowAddress = row._rawData[5];
@@ -77,7 +95,7 @@ async function fetchVaultScore(network, address) {
             score: `Score: ${vault._rawData[6]}`
         };
     } catch (error) {
-        console.error('Error in fetchVaultScore:', error);
+        console.error('Error in spreadsheet operations:', error);
         throw error;
     }
 }
