@@ -27,10 +27,21 @@ const credentials = process.env.GOOGLE_CREDENTIALS
     ? JSON.parse(process.env.GOOGLE_CREDENTIALS)
     : {};
 
+console.log('Credentials check:', {
+    hasCredentials: !!process.env.GOOGLE_CREDENTIALS,
+    hasPrivateKey: !!credentials.private_key,
+    hasClientEmail: !!credentials.client_email,
+    // DO NOT log the actual credentials!
+});
+
 async function fetchVaultScore(network, address) {
     try {
         // Verify credentials are available
         if (!credentials.private_key || !credentials.client_email) {
+            console.error('Missing credentials:', {
+                hasPrivateKey: !!credentials.private_key,
+                hasClientEmail: !!credentials.client_email
+            });
             throw new Error('Google credentials not properly configured');
         }
 
