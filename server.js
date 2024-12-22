@@ -1,7 +1,6 @@
 import express from 'express';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -9,16 +8,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = 3000;
+
+// Enable CORS for all routes
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+});
 
 // Serve static files from the 'public' directory
 app.use(express.static('public'));
 
-// Google Sheet ID from your URL
+// Google Sheet ID
 const SPREADSHEET_ID = '1vmF6WgW9VzRtO5HMQbC3GzXv5bhTJVixLLq25-w8KFk';
 
-// Read credentials
-const credentials = JSON.parse(fs.readFileSync('./credentials.json'));
+// Read credentials from environment variable
+const credentials = process.env.GOOGLE_CREDENTIALS 
+    ? JSON.parse(process.env.GOOGLE_CREDENTIALS)
+    : {};
 
 async function fetchVaultScore(network, address) {
     try {
@@ -62,6 +69,7 @@ async function fetchVaultScore(network, address) {
     }
 }
 
+// API endpoint
 app.get('/api/vault-score/:network/:address', async (req, res) => {
     try {
         const { network, address } = req.params;
@@ -81,10 +89,22 @@ app.get('/api/vault-score/:network/:address', async (req, res) => {
     }
 });
 
+// Serve index.html for the root path
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+// Handle 404s
+app.use((req, res) => {
+    res.status(404).send('Not Found');
 });
+
+const port = process.env.PORT || 3000;
+
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(port, () => {
+        console.log(`Server running at http://localhost:${port}`);
+    });
+}
+
+export default app;
