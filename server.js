@@ -63,8 +63,25 @@ async function fetchVaultScore(network, address) {
 }
 
 // Root path handler
-app.get('/', (req, res) => {
-    res.json({ message: 'Vault Score API is running. Use /api/vault-score/:network/:address to get vault scores.' });
+app.get('/', async (req, res) => {
+    try {
+        // Simple health check that doesn't require Google Sheets access
+        res.status(200).json({
+            status: 'online',
+            message: 'Vault Score API is running',
+            endpoints: {
+                health: '/',
+                vaultScore: '/api/vault-score/:network/:address'
+            }
+        });
+    } catch (error) {
+        console.error('Root endpoint error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Internal server error',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
 });
 
 // API endpoint
