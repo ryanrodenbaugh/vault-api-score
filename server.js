@@ -20,10 +20,24 @@ const SPREADSHEET_ID = '1vmF6WgW9VzRtO5HMQbC3GzXv5bhTJVixLLq25-w8KFk';
 
 async function fetchVaultScore(network, address) {
     try {
-        const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS || '{}');
+        // Debug logging
+        console.log('Attempting to parse credentials...');
+        console.log('Credentials string length:', process.env.GOOGLE_CREDENTIALS?.length);
+        console.log('First 100 chars:', process.env.GOOGLE_CREDENTIALS?.substring(0, 100));
         
+        let credentials;
+        try {
+            credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS || '{}');
+            console.log('Credentials parsed successfully');
+            console.log('Has private_key:', !!credentials.private_key);
+            console.log('Has client_email:', !!credentials.client_email);
+        } catch (parseError) {
+            console.error('Parse error details:', parseError);
+            throw new Error(`Failed to parse credentials: ${parseError.message}`);
+        }
+
         if (!credentials.private_key || !credentials.client_email) {
-            throw new Error('Google credentials not properly configured');
+            throw new Error('Missing required credentials fields');
         }
 
         const auth = new JWT({
@@ -55,7 +69,7 @@ async function fetchVaultScore(network, address) {
             score: `Score: ${vault._rawData[6]}`
         };
     } catch (error) {
-        console.error('Error fetching vault score:', error);
+        console.error('Error in fetchVaultScore:', error);
         throw error;
     }
 }
@@ -75,9 +89,9 @@ app.get('/api/vault-score/:network/:address', async (req, res) => {
         
         res.json(scoreData);
     } catch (error) {
-        console.error('Error:', error);
+        console.error('API Error:', error);
         res.status(500).json({ 
-            error: error.message || 'Internal server error',
+            error: error.message,
             timestamp: new Date().toISOString()
         });
     }
