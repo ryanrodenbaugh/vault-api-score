@@ -40,11 +40,19 @@ async function fetchVaultScore(network, address) {
             throw new Error('Missing required credentials fields');
         }
 
-        const auth = new JWT({
-            email: credentials.client_email,
-            key: credentials.private_key,
-            scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
-        });
+        console.log('4. Creating JWT auth...');
+        let auth;
+        try {
+            auth = new JWT({
+                email: credentials.client_email,
+                key: credentials.private_key.replace(/\\n/g, '\n'),
+                scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
+            });
+            console.log('5. JWT auth created successfully');
+        } catch (jwtError) {
+            console.error('JWT creation error:', jwtError);
+            throw jwtError;
+        }
 
         const doc = new GoogleSpreadsheet(SPREADSHEET_ID, auth);
         await doc.loadInfo();
